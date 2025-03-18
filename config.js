@@ -1,0 +1,3 @@
+const CONFIG = {
+    YANDEX_MAPS_API_KEY: "db0406cb-8a73-43e8-ab16-e7869130857e"
+};
