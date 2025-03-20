@@ -6,12 +6,8 @@
   <title>Навигатор с камерами</title>
   <script src="config.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      let script = document.createElement("script");
-      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.YANDEX_MAPS_API_KEY}&lang=ru_RU`;
-      script.onload = init;
-      document.head.appendChild(script);
-    });
+    const yandexApiUrl = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.YANDEX_MAPS_API_KEY}&lang=ru_RU`;
+    document.write(`<script src="${yandexApiUrl}"><\/script>`);
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
