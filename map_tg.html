@@ -87,8 +87,17 @@
       const { latitude, longitude, heading } = position.coords;
       const newCoords = [latitude, longitude];
 
-      if (!userPlacemark.geometry) {
+      if (userPlacemark && userPlacemark.geometry) {
         userPlacemark.geometry.setCoordinates(newCoords);
+      } else {
+        userPlacemark = new ymaps.Placemark(newCoords, {}, {
+          iconLayout: "default#image",
+          iconImageHref: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Navigation_Arrow.svg/120px-Navigation_Arrow.svg.png",
+          iconImageSize: [30, 30],
+          iconImageOffset: [-15, -15],
+          iconRotate: 0
+        });
+        map.geoObjects.add(userPlacemark);
       }
 
       if (lastCoords) {
@@ -96,7 +105,6 @@
         userPlacemark.options.set("iconRotate", angle);
       }
 
-      userPlacemark.geometry.setCoordinates(newCoords);
       lastCoords = newCoords;
 
       if (followUser) {
@@ -112,7 +120,7 @@
 
     function recenterMap() {
       followUser = true;
-      if (userPlacemark) {
+      if (userPlacemark && userPlacemark.geometry) {
         map.setCenter(userPlacemark.geometry.getCoordinates(), undefined, { duration: 300 });
       }
     }
