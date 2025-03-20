@@ -45,16 +45,6 @@
         behaviors: ["drag", "dblClickZoom", "multiTouch"]
       });
 
-      // Создаём значок "стрелка" вместо круга
-      userPlacemark = new ymaps.Placemark([56.8519, 60.6122], {}, {
-        iconLayout: "default#image",
-        iconImageHref: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Navigation_Arrow.svg/120px-Navigation_Arrow.svg.png",
-        iconImageSize: [30, 30],
-        iconImageOffset: [-15, -15],
-        iconRotate: 0
-      });
-      map.geoObjects.add(userPlacemark);
-
       // Следим за геопозицией
       navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
         enableHighAccuracy: true
@@ -87,9 +77,7 @@
       const { latitude, longitude, heading } = position.coords;
       const newCoords = [latitude, longitude];
 
-      if (userPlacemark && userPlacemark.geometry) {
-        userPlacemark.geometry.setCoordinates(newCoords);
-      } else {
+      if (!userPlacemark) {
         userPlacemark = new ymaps.Placemark(newCoords, {}, {
           iconLayout: "default#image",
           iconImageHref: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Navigation_Arrow.svg/120px-Navigation_Arrow.svg.png",
@@ -99,6 +87,8 @@
         });
         map.geoObjects.add(userPlacemark);
       }
+
+      userPlacemark.geometry.setCoordinates(newCoords);
 
       if (lastCoords) {
         const angle = getRotationAngle(lastCoords, newCoords);
@@ -120,7 +110,7 @@
 
     function recenterMap() {
       followUser = true;
-      if (userPlacemark && userPlacemark.geometry) {
+      if (userPlacemark) {
         map.setCenter(userPlacemark.geometry.getCoordinates(), undefined, { duration: 300 });
       }
     }
