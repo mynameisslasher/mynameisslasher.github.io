@@ -43,18 +43,25 @@
     <button onclick="recenterMap()">Вы</button>
   </div>
   <script>
-    let map, userPlacemark, followUser = true, lastCoords = null;
+    let map, userPlacemark, followUser = true, lastCoords = null, deviceAngle = 0;
 
     function init() {
       map = new ymaps.Map("map", {
         center: [56.8519, 60.6122],
         zoom: 17,
         controls: [],
-        behaviors: ["drag", "dblClickZoom", "multiTouch"]
+        behaviors: ["drag", "dblClickZoom", "multiTouch", "multiTouch", "scrollZoom", "ruler", "routeEditor", "rotation"]
       });
 
       navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
         enableHighAccuracy: true
+      });
+
+      window.addEventListener("deviceorientation", event => {
+        deviceAngle = event.alpha || 0;
+        if (userPlacemark) {
+          userPlacemark.options.set("iconRotate", deviceAngle);
+        }
       });
 
       map.events.add("actionbegin", () => followUser = false);
@@ -85,7 +92,7 @@
       if (!userPlacemark) {
         userPlacemark = new ymaps.Placemark(newCoords, {}, {
           iconLayout: "default#image",
-          iconImageHref: "https://mynameisslasher.github.io/arrow.png", // Локальный файл в репозитории,
+          iconImageHref: "arrow.png", // Используем локальный файл
           iconImageSize: [30, 30],
           iconImageOffset: [-15, -15],
           iconRotationType: "rotate"
@@ -97,9 +104,8 @@
 
       if (heading !== undefined) {
         userPlacemark.options.set("iconRotate", heading);
-      } else if (lastCoords) {
-        const angle = getRotationAngle(lastCoords, newCoords);
-        userPlacemark.options.set("iconRotate", angle);
+      } else {
+        userPlacemark.options.set("iconRotate", deviceAngle);
       }
 
       lastCoords = newCoords;
@@ -107,12 +113,6 @@
       if (followUser) {
         map.setCenter(newCoords, undefined, { duration: 300 });
       }
-    }
-
-    function getRotationAngle(oldCoords, newCoords) {
-      const dx = newCoords[1] - oldCoords[1];
-      const dy = newCoords[0] - oldCoords[0];
-      return (Math.atan2(dy, dx) * 180) / Math.PI + 90;
     }
 
     function recenterMap() {
