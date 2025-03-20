@@ -4,12 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Навигатор с камерами</title>
-  <script src="config.js"></script>
-  <script>
-    const yandexApiUrl = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.YANDEX_MAPS_API_KEY}&lang=ru_RU`;
-    document.write(`<script src="${yandexApiUrl}"><\/script>`);
-  </script>
-
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
@@ -38,35 +33,38 @@
     <button onclick="recenterMap()">Вы</button>
   </div>
   <script>
-    let map, userPlacemark, followUser = true;
+    let map, userPlacemark, followUser = true, lastCoords = null;
+
     ymaps.ready(init);
     
     function init() {
       map = new ymaps.Map("map", {
         center: [56.8519, 60.6122],
-        zoom: 14,
-        controls: []
+        zoom: 17,
+        controls: [],
+        behaviors: ["drag", "dblClickZoom", "multiTouch"]
       });
-      
-      // Получаем координаты пользователя и центрируем карту
-      navigator.geolocation.watchPosition(position => {
-        const { latitude, longitude } = position.coords;
-        if (!userPlacemark) {
-          userPlacemark = new ymaps.Placemark([latitude, longitude], {}, { preset: 'islands#blueCircleDotIcon' });
-          map.geoObjects.add(userPlacemark);
-        } else {
-          userPlacemark.geometry.setCoordinates([latitude, longitude]);
-        }
-        if (followUser) {
-          map.setCenter([latitude, longitude]);
-        }
-      }, error => console.error('Ошибка геолокации:', error), { enableHighAccuracy: true });
-      
+
+      // Создаём значок "стрелка" вместо круга
+      userPlacemark = new ymaps.Placemark([56.8519, 60.6122], {}, {
+        iconLayout: "default#image",
+        iconImageHref: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Navigation_Arrow.svg/120px-Navigation_Arrow.svg.png",
+        iconImageSize: [30, 30],
+        iconImageOffset: [-15, -15],
+        iconRotate: 0
+      });
+      map.geoObjects.add(userPlacemark);
+
+      // Следим за геопозицией
+      navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
+        enableHighAccuracy: true
+      });
+
       // Отключаем автоцентрирование при движении карты вручную
-      map.events.add('actionbegin', () => followUser = false);
-      
+      map.events.add("actionbegin", () => followUser = false);
+
       // Загружаем камеры
-      fetch('camera_coordinates.json')
+      fetch("camera_coordinates.json")
         .then(response => response.json())
         .then(cameras => {
           cameras.forEach(camera => {
@@ -76,19 +74,46 @@
               hintContent: props.hintContent,
               balloonContentBody: props.balloonContentBody
             }, {
-              preset: 'islands#redIcon'
+              preset: "islands#redIcon"
             });
             map.geoObjects.add(placemark);
           });
         })
-        .catch(error => console.error('Ошибка загрузки камер:', error));
+        .catch(error => console.error("Ошибка загрузки камер:", error));
     }
-    
-    // Функция возвращения к пользователю
+
+    function updateUserLocation(position) {
+      console.log("Получены координаты:", position.coords.latitude, position.coords.longitude);
+      const { latitude, longitude, heading } = position.coords;
+      const newCoords = [latitude, longitude];
+
+      if (!userPlacemark.geometry) {
+        userPlacemark.geometry.setCoordinates(newCoords);
+      }
+
+      if (lastCoords) {
+        const angle = getRotationAngle(lastCoords, newCoords);
+        userPlacemark.options.set("iconRotate", angle);
+      }
+
+      userPlacemark.geometry.setCoordinates(newCoords);
+      lastCoords = newCoords;
+
+      if (followUser) {
+        map.setCenter(newCoords, undefined, { duration: 300 });
+      }
+    }
+
+    function getRotationAngle(oldCoords, newCoords) {
+      const dx = newCoords[1] - oldCoords[1];
+      const dy = newCoords[0] - oldCoords[0];
+      return (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+    }
+
     function recenterMap() {
       followUser = true;
       if (userPlacemark) {
-        map.setCenter(userPlacemark.geometry.getCoordinates());
+        map.setCenter(userPlacemark.geometry.getCoordinates(), undefined, { duration: 300 });
       }
     }
   </script>
