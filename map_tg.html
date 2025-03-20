@@ -6,8 +6,12 @@
   <title>Навигатор с камерами</title>
   <script src="config.js"></script>
   <script>
-    const yandexApiUrl = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.YANDEX_MAPS_API_KEY}&lang=ru_RU`;
-    document.write(`<script src="${yandexApiUrl}"><\/script>`);
+    document.addEventListener("DOMContentLoaded", function() {
+      let script = document.createElement("script");
+      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.YANDEX_MAPS_API_KEY}&lang=ru_RU`;
+      script.onload = init;
+      document.head.appendChild(script);
+    });
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -39,8 +43,6 @@
   <script>
     let map, userPlacemark, followUser = true, lastCoords = null;
 
-    ymaps.ready(init);
-    
     function init() {
       map = new ymaps.Map("map", {
         center: [56.8519, 60.6122],
@@ -49,15 +51,12 @@
         behaviors: ["drag", "dblClickZoom", "multiTouch"]
       });
 
-      // Следим за геопозицией
       navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
         enableHighAccuracy: true
       });
 
-      // Отключаем автоцентрирование при движении карты вручную
       map.events.add("actionbegin", () => followUser = false);
 
-      // Загружаем камеры
       fetch("camera_coordinates.json")
         .then(response => response.json())
         .then(cameras => {
