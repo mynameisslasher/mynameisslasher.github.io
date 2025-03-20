@@ -88,14 +88,16 @@
           iconImageHref: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Navigation_Arrow.svg/120px-Navigation_Arrow.svg.png",
           iconImageSize: [30, 30],
           iconImageOffset: [-15, -15],
-          iconRotate: 0
+          iconRotationType: "rotate"
         });
         map.geoObjects.add(userPlacemark);
       }
 
       userPlacemark.geometry.setCoordinates(newCoords);
 
-      if (lastCoords) {
+      if (heading !== undefined) {
+        userPlacemark.options.set("iconRotate", heading);
+      } else if (lastCoords) {
         const angle = getRotationAngle(lastCoords, newCoords);
         userPlacemark.options.set("iconRotate", angle);
       }
