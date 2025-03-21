@@ -50,7 +50,7 @@
         center: [56.8519, 60.6122],
         zoom: 17,
         controls: [],
-        behaviors: ["drag", "dblClickZoom", "multiTouch", "scrollZoom", "ruler", "routeEditor", "rotation"]
+        behaviors: ["drag", "dblClickZoom", "multiTouch", "scrollZoom"]
       });
 
       navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
@@ -91,8 +91,7 @@
           iconLayout: "default#image",
           iconImageHref: "arrow.png",
           iconImageSize: [40, 40],
-          iconImageOffset: [-20, -20],
-          iconRotationType: "rotate"
+          iconImageOffset: [-20, -20]
         });
         map.geoObjects.add(userPlacemark);
       }
@@ -106,7 +105,6 @@
 
       if (followUser) {
         map.setCenter(newCoords, undefined, { duration: 300 });
-        map.setRotation(-rotationAngle);
       }
     }
 
@@ -120,7 +118,6 @@
       followUser = true;
       if (userPlacemark) {
         map.setCenter(userPlacemark.geometry.getCoordinates(), undefined, { duration: 300 });
-        map.setRotation(-deviceAngle);
       }
     }
   </script>
