@@ -50,7 +50,7 @@
         center: [56.8519, 60.6122],
         zoom: 17,
         controls: [],
-        behaviors: ["drag", "dblClickZoom", "multiTouch", "multiTouch", "scrollZoom", "ruler", "routeEditor", "rotation"]
+        behaviors: ["drag", "dblClickZoom", "multiTouch", "scrollZoom", "ruler", "routeEditor", "rotation"]
       });
 
       navigator.geolocation.watchPosition(updateUserLocation, error => console.error("Ошибка геолокации:", error), {
@@ -59,9 +59,6 @@
 
       window.addEventListener("deviceorientation", event => {
         deviceAngle = event.alpha || 0;
-        if (userPlacemark) {
-          userPlacemark.options.set("iconRotate", deviceAngle);
-        }
       });
 
       map.events.add("actionbegin", () => followUser = false);
@@ -92,9 +89,9 @@
       if (!userPlacemark) {
         userPlacemark = new ymaps.Placemark(newCoords, {}, {
           iconLayout: "default#image",
-          iconImageHref: "arrow.png", // Используем локальный файл
-          iconImageSize: [30, 30],
-          iconImageOffset: [-15, -15],
+          iconImageHref: "arrow.png",
+          iconImageSize: [40, 40],
+          iconImageOffset: [-20, -20],
           iconRotationType: "rotate"
         });
         map.geoObjects.add(userPlacemark);
@@ -102,23 +99,28 @@
 
       userPlacemark.geometry.setCoordinates(newCoords);
 
-      if (heading !== undefined) {
-        userPlacemark.options.set("iconRotate", heading);
-      } else {
-        userPlacemark.options.set("iconRotate", deviceAngle);
-      }
+      let rotationAngle = heading !== undefined ? heading : (lastCoords ? getRotationAngle(lastCoords, newCoords) : deviceAngle);
+      userPlacemark.options.set("iconRotate", rotationAngle);
 
       lastCoords = newCoords;
 
       if (followUser) {
         map.setCenter(newCoords, undefined, { duration: 300 });
+        map.setRotation(-rotationAngle);
       }
+    }
+
+    function getRotationAngle(oldCoords, newCoords) {
+      const dx = newCoords[1] - oldCoords[1];
+      const dy = newCoords[0] - oldCoords[0];
+      return (Math.atan2(dy, dx) * 180) / Math.PI + 90;
     }
 
     function recenterMap() {
       followUser = true;
       if (userPlacemark) {
         map.setCenter(userPlacemark.geometry.getCoordinates(), undefined, { duration: 300 });
+        map.setRotation(-deviceAngle);
       }
     }
   </script>
